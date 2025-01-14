@@ -17,7 +17,6 @@
 
 import os
 import sys
-from sets import Set
 
 compilers = ["gcc", "clang"]
 
@@ -213,7 +212,7 @@ for compiler in compilers:
                 print("%5s %s %s (%s/%s) %s" % (compiler,parameters_str,
                     green("OK", 4),
                     s_attempts,repeat_times,
-                    ' '.join(Set(additional_info))))
+                    ' '.join(set(additional_info))))
               total_ok += 1
             # FAIL
             elif s_attempts == 0:
@@ -222,7 +221,7 @@ for compiler in compilers:
                 print("%5s %s %6s (%s/%s) %s" % (compiler, parameters_str,
                      red("FAIL", 4),
                      s_attempts, repeat_times,
-                     ' '.join(Set(additional_info))))
+                     ' '.join(set(additional_info))))
               total_fail += 1
             # SOME
             else:
@@ -231,7 +230,7 @@ for compiler in compilers:
                 print("%5s %s %6s (%s/%s) %s" % (compiler,parameters_str,
                     orange("SOME", 4),
                     s_attempts,repeat_times,
-                    ' '.join(Set(additional_info))))
+                    ' '.join(set(additional_info))))
               total_some += 1
 
 
