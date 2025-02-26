@@ -1,4 +1,5 @@
 #!/bin/python
+
 import os, argparse
 
 # Defaults
@@ -14,22 +15,21 @@ parser = argparse.ArgumentParser(
                     prog='RIPE64 - Flag Tester',
                     description='''A python script to test specific combinations of flags with the RIPE64 tester.''', 
                     epilog='')
-parser.add_argument('--stkcan',
+parser.add_argument('-s', '--stkcan',
                     action='store_true',
                     help='Adds stack canaries to test list')
-parser.add_argument('--stkcla',
+parser.add_argument('-c', '--stkcla',
                     action='store_true',
                     help='Adds stack clash protection to test list')
-parser.add_argument('--dforti',
+parser.add_argument('-d', '--dforti',
                     action='store_true',
                     help='Adds DFORTIFY_SOURCE to test list')
-parser.add_argument('--fcfpro',
+parser.add_argument('-f', '--fcfpro',
                     action='store_true',
                     help='Adds Intels CET to test list')
-parser.add_argument('--mshstk',
+parser.add_argument('-m', '--mshstk',
                     action='store_true',
                     help='Adds Intels Shadow Stack to test list')
-
 
 args = parser.parse_args()
 
