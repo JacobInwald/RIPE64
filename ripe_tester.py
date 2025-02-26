@@ -17,11 +17,10 @@
 
 import os
 import sys
+import argparse
 
-compilers = ["gcc", "clang"]
-
+# Initialise default values
 locations = ["stack","heap","bss","data"]
-
 code_ptr = [
  "ret","baseptr",
  "funcptrstackvar", "funcptrstackparam",
@@ -31,17 +30,17 @@ code_ptr = [
  "longjmpstackvar", "longjmpstackparam",
  "longjmpheap", "longjmpbss", "longjmpdata"
 ]
-
 attacks = [
  # "nonop","simplenop",
  "simplenopequival", "r2libc", "rop"]
-
 funcs = [
     "memcpy", "strcpy", "strncpy", "sprintf", "snprintf",
     "strcat", "strncat", "sscanf", "fscanf", "homebrew"
   ]
 
-techniques = []
+# Arg Defaults
+compilers = ["gcc", "clang"]
+techniques = ["direct", "indirect"]
 repeat_times = 0
 results = {}
 print_OK = True
@@ -49,44 +48,55 @@ print_SOME = True
 print_FAIL = True
 summary_format = "bash"
 
-if len(sys.argv) < 2:
-  print("Usage: python "+sys.argv[0] + "[direct|indirect|both] <number of times to repeat each test>")
-  sys.exit(1)
-else:
-  if sys.argv[1] == "both":
-    techniques = ["direct","indirect"]
-  else:
-    techniques = [sys.argv[1]]
+parser = argparse.ArgumentParser(
+                    prog='RIPE64',
+                    description='''A testbed for memory exploits in C. 
+                    Updated version of program developed by Hubert ROSIER to assist the automated testing using the 64b port of the RIPE evaluation tool. 
+                    RIPE was originally developed by John Wilander (@johnwilander) and was debugged and extended by Nick Nikiforakis (@nicknikiforakis)''',
+                    epilog='')
 
-  repeat_times = int(sys.argv[2])
+parser.add_argument('-n', '--number', 
+                    required=True,
+                    type=int,
+                    help='number of times to run each test')
+parser.add_argument('-t', '--techniques',
+                    default='both',
+                    required=True, 
+                    type=str,
+                    choices=['direct', 'indirect', 'both'],
+                    help='techniques to use, default is both')
+parser.add_argument('-c', '--compiler',
+                    default='both',
+                    required=False,
+                    type=str,
+                    choices=['gcc', 'clang', 'both'],
+                    help='compiler to test, default is both')
+parser.add_argument('-f', '--format',
+                    default='bash',
+                    required=False,
+                    type=str,
+                    choices=['bash', 'latex'],
+                    help='format of output table, default is bash')
+parser.add_argument('-s', '--summary',
+                    default='111',
+                    required=False,
+                    type=str,
+                    choices=['000', '001', '010', '011', '100', '101', '110', '111'],
+                    help='specifies content in summary, each number flips in order printing some, ok and then fail cases, by default 111 so all is enabled')
 
-  if len(sys.argv) > 3:
-    if sys.argv[3] in ["gcc","clang"]:
-      compilers = [sys.argv[3]]
-    i = 4
-    while (i<len(sys.argv)):
-      arg = sys.argv[i]
-      if ("only" in arg or "not" in arg):
-        if arg == "--only-summary":
-          print_OK = False
-          print_SOME = False
-          print_FAIL = False
-        elif arg == "--not-ok":
-          print_OK = False
-        elif arg == "--only-ok":
-          print_SOME = False
-          print_FAIL = False
-        elif arg == "--not-fail":
-          print_FAIL = False
-        elif arg == "--only-fail":
-          print_OK = False
-          print_SOME = False
-        elif arg == "--only-some":
-          print_OK = False
-          print_FAIL = False
-      elif "format" in arg:
-        summary_format = arg
-      i+=1
+args = parser.parse_args()
+
+
+# Parse arguments
+repeat_times = args.number
+summary_format = args.format
+compilers = compilers if args.compiler == 'both' else [args.compiler]
+techniques = techniques if args.techniques == 'both' else [args.techniques]
+print_SOME = bool(args.summary[0])
+print_OK = bool(args.summary[1])
+print_FAIL = bool(args.summary[2])
+
+
 
 # Colored text
 def colored_string(string, color, size=0):
