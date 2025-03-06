@@ -1,0 +1,3 @@
+Using old Linux kernel interface
+IMG: [vdso] Address: 0x7f093b99790e:0x7f093b996000 added to the legacy images
+# $eof

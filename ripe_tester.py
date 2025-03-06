@@ -50,10 +50,11 @@ summary_format = "bash"
 
 parser = argparse.ArgumentParser(
                     prog='RIPE64',
-                    description='''A testbed for memory exploits in C. 
+                    description='''A testbed for memory exploits in C.
+                    Most recent version updated by Jacob Inwald, to add in CET emulation support and clean up python file.
                     Updated version of program developed by Hubert ROSIER to assist the automated testing using the 64b port of the RIPE evaluation tool. 
                     RIPE was originally developed by John Wilander (@johnwilander) and was debugged and extended by Nick Nikiforakis (@nicknikiforakis)''',
-                    epilog='')
+                    epilog='May your exploiting prove RIPE!')
 
 parser.add_argument('-n', '--number', 
                     required=True,
@@ -83,7 +84,12 @@ parser.add_argument('-s', '--summary',
                     type=str,
                     choices=['000', '001', '010', '011', '100', '101', '110', '111'],
                     help='specifies content in summary, each number flips in order printing some, ok and then fail cases, by default 111 so all is enabled')
-
+parser.add_argument('--cet', 
+                    default='N', 
+                    required=False,
+                    type=str,
+                    choices=['N', 'E', 'H'],
+                    help='specifies whether to use CET, N means no CET, E means emulated CET using Intels SDE, and H means hardware enabled CET')
 args = parser.parse_args()
 
 
@@ -97,6 +103,14 @@ print_OK = bool(args.summary[1])
 print_FAIL = bool(args.summary[2])
 
 
+emulate_cet = True
+cet_prepend = ""
+if args.cet == 'H':
+    cet_prepend = "GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK "
+elif args.cet == 'E':
+    cet_prepend = "/home/pinwald/sde/sde64 -cet -- "
+
+cmd = cet_prepend + "$(pwd)/build/%s_attack_gen "
 
 # Colored text
 def colored_string(string, color, size=0):
@@ -197,7 +211,7 @@ for compiler in compilers:
               ## Dr. Memory
               # cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | drmemory -no_check_uninitialized -crash_at_error -- ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
 
-              cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
+              cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | " + (cmd % compiler) + parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
               os.system(cmdline)
 
               log_entry = open("/tmp/ripe_log","r").read()
