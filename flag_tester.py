@@ -30,7 +30,9 @@ parser.add_argument('-f', '--fcfpro',
 parser.add_argument('-m', '--mshstk',
                     action='store_true',
                     help='Adds Intels Shadow Stack to test list')
-
+parser.add_argument('--enable_hardware_cet',
+                    action='store_true',
+                    help='Enables hardware support for CET, may turn off IBT features')
 args = parser.parse_args()
 
 HARDEN_FLAGS = ''
@@ -49,8 +51,12 @@ fp += 'fcfpro-' if args.fcfpro else ''
 fp += 'mshstk-' if args.mshstk else ''
 fp = fp[:-1]
 
+cet = 'N'
+if args.fcfpro or args.mshstk:
+    cet = 'H' if args.enable_hardware_cet else 'E'
+
 os.makedirs('data', exist_ok=True)
 os.makedirs('build', exist_ok=True)
 os.system('make clean')
 os.system('make build/gcc_attack_gen')
-os.system(f'./ripe_tester.py -t both -n 5 -c {compiler} -f latex > data/{fp}')
+os.system(f'./ripe_tester.py -t both -n 5 -c {compiler} -f latex > data/{fp} --cet {cet}')
