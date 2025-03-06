@@ -262,6 +262,8 @@ for compiler in compilers:
   results[compiler] = total
 
 
+os.system('rm fscanf_temp_file sde-cet-checker*')
+
 total_attacks = sum(v for _, v in results[compilers[0]])
 
 
