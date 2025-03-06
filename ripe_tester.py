@@ -48,69 +48,6 @@ print_SOME = True
 print_FAIL = True
 summary_format = "bash"
 
-parser = argparse.ArgumentParser(
-                    prog='RIPE64',
-                    description='''A testbed for memory exploits in C.
-                    Most recent version updated by Jacob Inwald, to add in CET emulation support and clean up python file.
-                    Updated version of program developed by Hubert ROSIER to assist the automated testing using the 64b port of the RIPE evaluation tool. 
-                    RIPE was originally developed by John Wilander (@johnwilander) and was debugged and extended by Nick Nikiforakis (@nicknikiforakis)''',
-                    epilog='May your exploiting prove RIPE!')
-
-parser.add_argument('-n', '--number', 
-                    required=True,
-                    type=int,
-                    help='number of times to run each test')
-parser.add_argument('-t', '--techniques',
-                    default='both',
-                    required=True, 
-                    type=str,
-                    choices=['direct', 'indirect', 'both'],
-                    help='techniques to use, default is both')
-parser.add_argument('-c', '--compiler',
-                    default='both',
-                    required=False,
-                    type=str,
-                    choices=['gcc', 'clang', 'both'],
-                    help='compiler to test, default is both')
-parser.add_argument('-f', '--format',
-                    default='bash',
-                    required=False,
-                    type=str,
-                    choices=['bash', 'latex'],
-                    help='format of output table, default is bash')
-parser.add_argument('-s', '--summary',
-                    default='111',
-                    required=False,
-                    type=str,
-                    choices=['000', '001', '010', '011', '100', '101', '110', '111'],
-                    help='specifies content in summary, each number flips in order printing some, ok and then fail cases, by default 111 so all is enabled')
-parser.add_argument('--cet', 
-                    default='N', 
-                    required=False,
-                    type=str,
-                    choices=['N', 'E', 'H'],
-                    help='specifies whether to use CET, N means no CET, E means emulated CET using Intels SDE, and H means hardware enabled CET')
-args = parser.parse_args()
-
-
-# Parse arguments
-repeat_times = args.number
-summary_format = args.format
-compilers = compilers if args.compiler == 'both' else [args.compiler]
-techniques = techniques if args.techniques == 'both' else [args.techniques]
-print_SOME = bool(args.summary[0])
-print_OK = bool(args.summary[1])
-print_FAIL = bool(args.summary[2])
-
-
-emulate_cet = True
-cet_prepend = ""
-if args.cet == 'H':
-    cet_prepend = "GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK "
-elif args.cet == 'E':
-    cet_prepend = "/home/pinwald/sde/sde64 -cet -- "
-
-cmd = cet_prepend + "$(pwd)/build/%s_attack_gen "
 
 # Colored text
 def colored_string(string, color, size=0):
@@ -180,14 +117,79 @@ def analyze_log2(additional_info):
 
   return additional_info
 
+
+parser = argparse.ArgumentParser(
+                    prog='RIPE64',
+                    description='''A testbed for memory exploits in C.
+                    Most recent version updated by Jacob Inwald, to add in CET emulation support and clean up python file.
+                    Updated version of program developed by Hubert ROSIER to assist the automated testing using the 64b port of the RIPE evaluation tool. 
+                    RIPE was originally developed by John Wilander (@johnwilander) and was debugged and extended by Nick Nikiforakis (@nicknikiforakis)''',
+                    epilog='May your exploiting prove RIPE!')
+
+parser.add_argument('-n', '--number', 
+                    required=True,
+                    type=int,
+                    help='number of times to run each test')
+parser.add_argument('-t', '--techniques',
+                    default='both',
+                    required=True, 
+                    type=str,
+                    choices=['direct', 'indirect', 'both'],
+                    help='techniques to use, default is both')
+parser.add_argument('-c', '--compiler',
+                    default='both',
+                    required=False,
+                    type=str,
+                    choices=['gcc', 'clang', 'both'],
+                    help='compiler to test, default is both')
+parser.add_argument('-f', '--format',
+                    default='bash',
+                    required=False,
+                    type=str,
+                    choices=['bash', 'latex'],
+                    help='format of output table, default is bash')
+parser.add_argument('-s', '--summary',
+                    default='111',
+                    required=False,
+                    type=str,
+                    choices=['000', '001', '010', '011', '100', '101', '110', '111'],
+                    help='specifies content in summary, each number flips in order printing some, ok and then fail cases, by default 111 so all is enabled')
+parser.add_argument('--cet', 
+                    default='N', 
+                    required=False,
+                    type=str,
+                    choices=['N', 'E', 'H'],
+                    help='specifies whether to use CET, N means no CET, E means emulated CET using Intels SDE, and H means hardware enabled CET')
+args = parser.parse_args()
+
+
+# Parse arguments
+repeat_times = args.number
+summary_format = args.format
+compilers = compilers if args.compiler == 'both' else [args.compiler]
+techniques = techniques if args.techniques == 'both' else [args.techniques]
+print_SOME = bool(args.summary[0])
+print_OK = bool(args.summary[1])
+print_FAIL = bool(args.summary[2])
+
+# Add in command prepends to allow cet
+emulate_cet = True
+cet_prepend = ""
+if args.cet == 'H':
+    cet_prepend = "GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK "
+elif args.cet == 'E': # TODO: add check for sde64 in path
+    cet_prepend = "sde64 -cet -- "
+
+cmd = cet_prepend + "$(pwd)/build/%s_attack_gen "
+
+
 if not os.path.exists("/tmp/ripe-eval"):
   os.system("mkdir /tmp/ripe-eval")
 
+
 for compiler in compilers:
-  total_ok = 0
-  total_fail = 0
-  total_some = 0
-  total_np = 0
+  total = {'ok': 0, 'fail': 0, 'some': 0, 'np': 0}
+
   for tech in techniques:
     for loc in locations:
       for ptr in code_ptr:
@@ -196,27 +198,24 @@ for compiler in compilers:
             i = 0
             s_attempts = 0
             attack_possible = 1
-            additional_info = [];
-            while i < repeat_times:
-              i += 1
-
+            parameters_str = "-t %8s -l %5s -c %18s -i %16s -f %8s" % (tech,loc,ptr,attack,func)
+            
+            additional_info = []
+            for i in range(1, repeat_times+1, 1):
+              
+                # Command Setup
               os.system("rm /tmp/ripe_log")
-              parameters = (tech,loc,ptr,attack,func)
-              parameters_str = "-t %8s -l %5s -c %18s -i %16s -f %8s" % parameters
               sys.stdout.write('... Running %s ...\r' % parameters_str)
               sys.stdout.flush()
-              os.system("echo "+parameters_str+">> /tmp/ripe_log")
-              ## Valgrind - Memcheck
-              # cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | G_SLICE=always-malloc G_DEBUG=gc-friendly  valgrind -v --tool=memcheck --num-callers=40 ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
-              ## Dr. Memory
-              # cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | drmemory -no_check_uninitialized -crash_at_error -- ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
-
-              cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | " + (cmd % compiler) + parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
+              os.system("echo  %s >> /tmp/ripe_log" % parameters_str)
+              
+              cmdline = f"(echo \"touch /tmp/ripe-eval/f_xxxx\" | {(cmd % compiler)} {parameters_str} >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2{i}"
               os.system(cmdline)
-
+              
+              # Check ouput
               log_entry = open("/tmp/ripe_log","r").read()
+              
               if log_entry.find("Impossible") != -1:
-                # print("%5s %s %6s" % (compiler,parameters_str,blue("NOT POSSIBLE")))
                 attack_possible = 0
                 break  #Not possible once, not possible always
 
@@ -225,9 +224,10 @@ for compiler in compilers:
               if os.path.exists("/tmp/ripe-eval/f_xxxx"):
                 s_attempts += 1
                 os.system("rm /tmp/ripe-eval/f_xxxx")
-
+            
+            # Finish attack checking
             if attack_possible == 0:
-              total_np += 1
+              total['np'] += 1
               continue
 
             # SUCCESS
@@ -237,7 +237,8 @@ for compiler in compilers:
                     green("OK", 4),
                     s_attempts,repeat_times,
                     ' '.join(set(additional_info))))
-              total_ok += 1
+              total['ok'] += 1
+
             # FAIL
             elif s_attempts == 0:
               additional_info = analyze_log2(additional_info)
@@ -246,7 +247,8 @@ for compiler in compilers:
                      red("FAIL", 4),
                      s_attempts, repeat_times,
                      ' '.join(set(additional_info))))
-              total_fail += 1
+              total['fail'] += 1
+
             # SOME
             else:
               if print_SOME:
@@ -255,16 +257,14 @@ for compiler in compilers:
                     orange("SOME", 4),
                     s_attempts,repeat_times,
                     ' '.join(set(additional_info))))
-              total_some += 1
+              total['some'] += 1
+
+  results[compiler] = total
 
 
-  results[compiler] = {
-          'total_ok': total_ok,
-          'total_fail': total_fail,
-          'total_some': total_some,
-          'total_np': total_np}
+total_attacks = sum(v for _, v in results[compilers[0]])
 
-total_attacks = total_ok + total_some + total_fail + total_np
+
 if "bash" in summary_format:
   for compiler in results:
     print("\n"+bold("||Summary "+compiler+"||"))
@@ -272,6 +272,7 @@ if "bash" in summary_format:
     print("OK: %s SOME: %s FAIL: %s NP: %s Total Attacks: %s\n\n"% (
       results[compiler]["total_ok"], results[compiler]["total_some"], results[compiler]["total_fail"],
       results[compiler]["total_np"], total_attacks))
+
 
 if "latex" in summary_format:
   print("\\begin{tabular}{|c|c|c|c|}\\hline\n"
