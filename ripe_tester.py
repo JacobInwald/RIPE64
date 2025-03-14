@@ -262,18 +262,18 @@ for compiler in compilers:
   results[compiler] = total
 
 
-os.system('rm fscanf_temp_file sde-cet-checker*')
+os.system('rm -rf fscanf_temp_file sde-cet-checker*')
 
-total_attacks = sum(v for _, v in results[compilers[0]])
+total_attacks=sum(results[compilers[0]][v] for v in results[compilers[0]])
 
 
 if "bash" in summary_format:
   for compiler in results:
     print("\n"+bold("||Summary "+compiler+"||"))
-    total_attacks = results[compiler]["total_ok"] + results[compiler]["total_some"] + results[compiler]["total_fail"]
+    total_attacks = results[compiler]["ok"] + results[compiler]["some"] + results[compiler]["fail"]
     print("OK: %s SOME: %s FAIL: %s NP: %s Total Attacks: %s\n\n"% (
-      results[compiler]["total_ok"], results[compiler]["total_some"], results[compiler]["total_fail"],
-      results[compiler]["total_np"], total_attacks))
+      results[compiler]["ok"], results[compiler]["some"], results[compiler]["fail"],
+      results[compiler]["np"], total_attacks))
 
 
 if "latex" in summary_format:
@@ -282,9 +282,9 @@ if "latex" in summary_format:
   for compiler in results:
     print(" (%s) & %s (%s\\%%) & %s (%s\\%%) & %s (%s\\%%) \\\\ \\hline\n"% (
       compiler,
-      results[compiler]["total_ok"], int(round((100.0*results[compiler]["total_ok"])/ total_attacks)),
-      results[compiler]["total_some"], int(round((100.0*results[compiler]["total_some"])/ total_attacks)),
-      results[compiler]["total_fail"], int(round((100.0*results[compiler]["total_fail"])/ total_attacks))
+      results[compiler]["ok"], int(round((100.0*results[compiler]["ok"])/ total_attacks)),
+      results[compiler]["some"], int(round((100.0*results[compiler]["some"])/ total_attacks)),
+      results[compiler]["fail"], int(round((100.0*results[compiler]["fail"])/ total_attacks))
       ))
   print("\\end{tabular}\n")
 

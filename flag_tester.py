@@ -9,7 +9,7 @@ stkcan = '-fstack-protector-strong'
 dforti = '-DFORTIFY_SOURCE=3 -O2'
 stkcla = '-fstack-clash-protection'
 fcfpro = '-fcf-protection=full'
-mshstk = '-mshstk'
+mshstk = '-fcf-protection=return'
 
 parser = argparse.ArgumentParser(
                     prog='RIPE64 - Flag Tester',
@@ -59,4 +59,4 @@ os.makedirs('data', exist_ok=True)
 os.makedirs('build', exist_ok=True)
 os.system('make clean')
 os.system('make build/gcc_attack_gen')
-os.system(f'./ripe_tester.py -t both -n 5 -c {compiler} -f latex > data/{fp} --cet {cet}')
+os.system(f'./ripe_tester.py -t both -n 3 -c {compiler} -f latex --cet {cet} > data/{fp} ')
