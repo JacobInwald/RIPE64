@@ -1,0 +1,4 @@
+rm ./build/*
+gcc -g -w -D_FORTIFY_SOURCE=0 -no-pie -fno-stack-protector -z execstack -z norelro  -fcf-protection=full ./src/attack_gen.c -o ./build/gcc_attack_gen
+rm ./build/*
+gcc -g -w -D_FORTIFY_SOURCE=0 -no-pie -fno-stack-protector -z execstack -z norelro -fstack-protector-strong -DFORTIFY_SOURCE=3 -O2 -fcf-protection=full ./src/attack_gen.c -o ./build/gcc_attack_gen
