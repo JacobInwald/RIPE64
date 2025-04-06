@@ -2,7 +2,7 @@ GCC=gcc
 CLG=clang
 
 # Disable stack protection, make the stack executable and add debug info
-CFLAGS=-fno-stack-protector -z execstack -g ${HARDEN_FLAGS}
+CFLAGS=-g -w -D_FORTIFY_SOURCE=0 -no-pie -fno-stack-protector -z execstack -z norelro ${HARDEN_FLAGS}
 
 all: build/gcc_attack_gen build/clang_attack_gen
 

@@ -60,6 +60,14 @@ Successful attacks are logged as "OK", the ones that failed are "FAILED", the on
 are marked as SOME.  
 The attacks logged as "NOT POSSIBLE" are the ones that are considered impossible such as overflowing a function pointer in the bss segment from the stack.
 
+## Modification (UG4-Poject - Jacob)
+- Updated a fair bit of python code in `ripe_tester.py` and `Makefile` to allow for own flag testing.
+- `ripe_tester.py` now has a proper argument parser, so for assistance just use `-h`.
+- Added `flag_tester.py` which was used to collect the results, again use `-h` for help.
+- If you want to test using emulation, you need to install Intel SDE and add the **absolute** path to the `SDE_PATH` environment variable when call any scripts.
+- Be aware emulation is **SLOW**.
+- `collect.sh` provides some example usages of `flag_tester.py`.
+
 ## Note
 ### ASLR
 ASLR can be disabled temporary with:  

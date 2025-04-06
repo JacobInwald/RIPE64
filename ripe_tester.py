@@ -168,18 +168,21 @@ repeat_times = args.number
 summary_format = args.format
 compilers = compilers if args.compiler == 'both' else [args.compiler]
 techniques = techniques if args.techniques == 'both' else [args.techniques]
-print_SOME = bool(args.summary[0])
-print_OK = bool(args.summary[1])
-print_FAIL = bool(args.summary[2])
+print_SOME = args.summary[0] == '1'
+print_OK = args.summary[1] == '1'
+print_FAIL = args.summary[2] == '1'
 
 # Add in command prepends to allow cet
-emulate_cet = True
+
 cet_prepend = ""
 if args.cet == 'H':
     cet_prepend = "GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK "
 elif args.cet == 'E': # TODO: add check for sde64 in path
-    cet_prepend = "sde64 -cet -- "
-
+    try:
+        cet_prepend = os.environ['SDE_PATH']+'/sde64 -cet -- '
+    except Exception:
+        print('To emulate CET, please provide the path to the SDE installation in SDE_PATH')
+        exit(1)
 cmd = cet_prepend + "$(pwd)/build/%s_attack_gen "
 
 
