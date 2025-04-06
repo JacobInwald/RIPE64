@@ -1,5 +1,5 @@
 # RIPE64: a 64bit port of the Runtime Intrusion Prevention Evaluator
-This repository presents a 64-bit port of the [RIPE benchmark](https://github.com/johnwilander/RIPE).
+This repository presents a modified 64-bit port of the [RIPE benchmark](https://github.com/johnwilander/RIPE).
 RIPE was originally developed by John Wilander and Nick Nikiforakis and
 presented at the 2011 Annual Computer Security Applications Conference (ACSAC) in Orlando, Florida.
 
